@@ -89,6 +89,9 @@
     "_components": [
       {
         "__id__": 18
+      },
+      {
+        "__id__": 19
       }
     ],
     "_prefab": null,
@@ -638,9 +641,11 @@
   },
   {
     "__type__": "cc.ClickEvent",
-    "target": null,
-    "component": "",
-    "handler": "",
+    "target": {
+      "__id__": 2
+    },
+    "component": "Menu",
+    "handler": "onButInifity",
     "customEventData": ""
   },
   {
@@ -804,5 +809,15 @@
     "_fitWidth": false,
     "_fitHeight": true,
     "_id": "40N7n092BBN7/1yDlv9q0O"
+  },
+  {
+    "__type__": "73f59dwqOVLCJM2Joiaxw63",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 2
+    },
+    "_enabled": true,
+    "_id": "90X+R++9pAapFLc4cwJIfH"
   }
 ]
