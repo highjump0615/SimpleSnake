@@ -8,6 +8,8 @@
 //  - [Chinese] http://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/en/scripting/life-cycle-callbacks.html
 
+var common = require('Common');
+
 cc.Class({
     extends: cc.Component,
 
@@ -119,12 +121,15 @@ cc.Class({
     },
 
     setMarkerPosition(pt) {
-        let _pos = new cc.Vec2(pt.x,pt.y);
+        let _pos = new cc.Vec2(pt.x, pt.y);
         _pos.subSelf(this.node.position);
 
         //控制位置
         let pos = this.clampPos(_pos, this.fixedPointMoveCenterPos, this.movePointMoveRadius);
         //设置固定点位置
         this.setMovePointPos(pos);
+
+        // 设置游戏方向
+        common.game.setDirection(pos);
     },
 });

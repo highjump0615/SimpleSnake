@@ -8,34 +8,64 @@
 //  - [Chinese] http://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/en/scripting/life-cycle-callbacks.html
 
+var common = require('Common');
+var helper = require('Helpers');
+
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        // foo: {
-        //     // ATTRIBUTES:
-        //     default: null,        // The default value will be used only when the component attaching
-        //                           // to a node for the first time
-        //     type: cc.SpriteFrame, // optional, default is typeof default
-        //     serializable: true,   // optional, default is true
-        // },
-        // bar: {
-        //     get () {
-        //         return this._bar;
-        //     },
-        //     set (value) {
-        //         this._bar = value;
-        //     }
-        // },
+        // player 节点，用于获取主角弹跳的高度，和控制主角行动开关
+        snake: {
+            default: null,
+            type: cc.Prefab
+        },
+
+        // 背景节点
+        main: {
+            default: null,
+            type: cc.Node
+        },
+
+        // 方向盘
+        joystick: {
+            default: null,
+            type: cc.Node
+        },
     },
 
     // LIFE-CYCLE CALLBACKS:
 
-    // onLoad () {},
+    onLoad () {
+        // init
+        common.game = this;
 
-    start () {
+        // cc.director.getPhysicsManager().enabled = true;
+        // cc.director.getPhysicsManager().gravity = cc.v2()
 
+        // init main player snake
+        var snake = cc.instantiate(this.snake);
+        this.main.addChild(snake, helper.MAX_SNAKE_LEN);
+        snake.setPosition(cc.v2(0, 0));
+        snake.getComponent("Snake").initHead();
+
+        this.snakeMain = snake;
     },
 
-    // update (dt) {},
+    start () {
+    },
+
+    update (dt) {
+        if (!this.snakeMain) {
+            return;
+        }
+
+        // 根据主玩家的位置更新背景位置
+        var pos = this.snakeMain.position.neg();
+        this.main.setPosition(pos);
+    },
+
+    setDirection(posDir) {        
+        this.snakeMain.getComponent("Snake").direction = posDir.normalize();
+    }
 });
