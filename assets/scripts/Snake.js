@@ -52,6 +52,8 @@ cc.Class({
 
     update (dt) {                
         if (helper.isInGameArea(this.node.position)) {
+            var posOld = this.node.position;
+
             // head, calculate the new position
             if (!this.prev) {
                 var posNext = this.getNextPosition();
@@ -64,6 +66,11 @@ cc.Class({
             else {
                 this.node.setPosition(this.paths[0]);
             }
+
+            // rotate image
+            var posAngle = this.node.position.sub(posOld);
+            var angle = Math.atan2(posAngle.y, posAngle.x) / Math.PI * 180;
+            this.node.rotation = -angle;
 
             // reached the length of current element
             if (this.paths.length >= this.spacing / this.speed) {

@@ -19,7 +19,8 @@ function isInGameArea(point) {
     return true;    
 }
 
+
 export default {
     MAX_SNAKE_LEN: 10000,
-    isInGameArea
+    isInGameArea,
 }
