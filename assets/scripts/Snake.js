@@ -96,12 +96,12 @@ cc.Class({
 
         // 生成身体部分
         if (this.length <= 1) {
-            return
+            return;
         }
 
         var newBody = cc.instantiate(common.game.snake);
         var newBodyObj = newBody.getComponent('Snake');
-        this.node.parent.addChild(newBody, helper.MAX_SNAKE_LEN - this.seqIndex - 1);
+        this.node.parent.addChild(newBody, Game.MAX_SNAKE_LEN - this.seqIndex - 1);
 
         newBody.setPosition(this.initPosition);
         newBodyObj.length = this.length - 1;

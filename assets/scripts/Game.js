@@ -9,7 +9,6 @@
 //  - [English] http://www.cocos2d-x.org/docs/creator/en/scripting/life-cycle-callbacks.html
 
 var common = require('Common');
-var helper = require('Helpers');
 
 cc.Class({
     extends: cc.Component,
@@ -45,7 +44,7 @@ cc.Class({
 
         // init main player snake
         var snake = cc.instantiate(this.snake);
-        this.main.addChild(snake, helper.MAX_SNAKE_LEN);
+        this.main.addChild(snake, Game.MAX_SNAKE_LEN);
         snake.setPosition(cc.v2(0, 0));
         snake.getComponent("Snake").initHead();
 

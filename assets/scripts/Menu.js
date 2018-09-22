@@ -31,7 +31,8 @@ cc.Class({
 
     // LIFE-CYCLE CALLBACKS:
 
-    // onLoad () {},
+    onLoad () {
+    },
 
     start () {
     },
