@@ -37,11 +37,13 @@ cc.Class({
         mvs.response.sendEventNotify = this.sendEventNotify.bind(this);
         mvs.response.networkStateNotify = this.networkStateNotify.bind(this);
 
+        mvs.response.sendEventResponse = this.sendEventResponse.bind(this);
+
         var result = mvs.engine.init(mvs.response, GLB.channel, GLB.platform, Config.gameId);
         if (result !== 0) {
             console.log('初始化失败,错误码:' + result);
         }
-        Game.GameManager.blockInput();
+        // Game.GameManager.blockInput();
     },
 
     networkStateNotify: function(netNotify) {
@@ -220,142 +222,30 @@ cc.Class({
 
     // 玩家行为通知--
     sendEventNotify: function(info) {
-        var cpProto = JSON.parse(info.cpProto);
+        clientEvent.dispatch(clientEvent.eventType.sendEventNotify, info);
+    },
 
-        if (info.cpProto.indexOf(GLB.GAME_START_EVENT) >= 0) {
-            var remoteUserIds = JSON.parse(info.cpProto).userIds;
-            // 分队--
-            if (remoteUserIds.length % 2 !== 0) {
-                return console.log("人数不为偶数, 无法开战！");
-            }
-            var selfCamp = 0;
-            var index;
-            for (index = 0; index < remoteUserIds.length; index++) {
-                if (GLB.userInfo.id === remoteUserIds[index]) {
-                    if (index < remoteUserIds.length / 2) {
-                        selfCamp = 0;
-                    } else {
-                        selfCamp = 1;
-                    }
-                    break;
-                }
-            }
-            this.enemyIds = [];
-            this.friendIds = [GLB.userInfo.id];
-            for (index = 0; index < remoteUserIds.length; index++) {
-                var camp = 0;
-                if (index < remoteUserIds.length / 2) {
-                    camp = 0;
-                } else {
-                    camp = 1;
-                }
-                if (camp === selfCamp) {
-                    if (remoteUserIds[index] !== GLB.userInfo.id) {
-                        this.friendIds.push(remoteUserIds[index]);
-                    }
-                } else {
-                    this.enemyIds.push(remoteUserIds[index]);
-                }
-            }
-            GLB.playerUserIds = this.friendIds.concat(this.enemyIds);
-            console.log("remoteUserIds:" + remoteUserIds);
-            console.log("GLB.playerUserIds:" + GLB.playerUserIds);
+    sendEventResponse: function(sendEventRsp) {
+        clientEvent.dispatch(clientEvent.eventType.sendEventResponse, sendEventRsp);
+    },
 
-            this.startGame();
+
+    sendEvent: function(msg) {
+        var result = mvs.engine.sendEvent(JSON.stringify(msg));
+        if (result.result !== 0) {
+            console.log(msg.action, result.result);
         }
 
-        var player = null;
-        if (info.cpProto.indexOf(GLB.PLAYER_FLY_EVENT) >= 0) {
-            player = Game.PlayerManager.getPlayerByUserId(info.srcUserId);
-            if (player) {
-                player.flyNotify();
-            }
+        GLB.events[result.sequence] = msg;
+    },
+    
+    sendEventEx: function(msg) {
+        var result = mvs.engine.sendEventEx(0, JSON.stringify(msg), 0, GLB.playerUserIds);
+        if (result.result !== 0) {
+            console.log(msg.action, result.result);
         }
 
-        if (info.cpProto.indexOf(GLB.PLAYER_FIRE_EVENT) >= 0) {
-            for (var i = 0; i < GLB.playerUserIds.length; i++) {
-                player = Game.PlayerManager.getPlayerByUserId(GLB.playerUserIds[i]);
-                if (player) {
-                    for (var j = 0; j < cpProto.data.length; j++) {
-                        if (cpProto.data[j].playerId === player.userId) {
-                            player.fireNotify(cpProto.data[j].bulletPointY);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (info.cpProto.indexOf(GLB.NEW_ITEM_EVENT) >= 0) {
-            Game.ItemManager.spawnItemNotify(cpProto);
-        }
-
-        if (info.cpProto.indexOf(GLB.PLAYER_GET_ITEM_EVENT) >= 0) {
-            player = Game.PlayerManager.getPlayerByUserId(cpProto.playerId);
-            if (player) {
-                player.getItemNotify(cpProto);
-            }
-        }
-
-        if (info.cpProto.indexOf(GLB.PLAYER_REMOVE_ITEM_EVENT) >= 0) {
-            player = Game.PlayerManager.getPlayerByUserId(info.srcUserId);
-            if (player) {
-                player.removeItemNotify(cpProto);
-            }
-        }
-
-        if (info.cpProto.indexOf(GLB.PLAYER_HURT_EVENT) >= 0) {
-            if (Game.GameManager.gameState !== GameState.Over) {
-                player = Game.PlayerManager.getPlayerByUserId(cpProto.playerId);
-                if (player) {
-                    player.hurtNotify(cpProto.murderId);
-                }
-                // 检查回合结束--
-                var loseCamp = Game.PlayerManager.getLoseCamp();
-                if (loseCamp != null) {
-                    Game.GameManager.gameState = GameState.Over
-                    if (GLB.isRoomOwner) {
-                        this.sendRoundOverMsg(loseCamp);
-                    }
-                }
-            }
-        }
-
-        if (info.cpProto.indexOf(GLB.ROUND_OVER) >= 0) {
-            Game.GameManager.gameState = GameState.Over;
-            // 如果发送方为敌方--
-            var loseCamp1 = cpProto.loseCamp;
-            if (this.friendIds.indexOf(info.srcUserId) < 0) {
-                if (loseCamp1 === Camp.Friend) {
-                    loseCamp1 = Camp.Enemy;
-                } else if (loseCamp1 === Camp.Enemy) {
-                    loseCamp1 = Camp.Friend;
-                }
-            }
-            clientEvent.dispatch(clientEvent.eventType.roundOver, {loseCamp: loseCamp1});
-        }
-
-        if (info.cpProto.indexOf(GLB.ROUND_START) >= 0) {
-            Game.GameManager.gameState = GameState.Play;
-            clientEvent.dispatch(clientEvent.eventType.roundStart);
-        }
-
-        if (info.cpProto.indexOf(GLB.READY) >= 0) {
-            this.readyCnt++;
-            if (GLB.isRoomOwner && this.readyCnt >= GLB.playerUserIds.length) {
-                this.sendRoundStartMsg();
-            }
-        }
-
-        if (info.cpProto.indexOf(GLB.TIME_OVER) >= 0) {
-            Game.GameManager.gameState = GameState.Over;
-            for (var m = 0; m < GLB.playerUserIds.length; m++) {
-                player = Game.PlayerManager.getPlayerByUserId(GLB.playerUserIds[m]);
-                if (player) {
-                    player.dead();
-                }
-            }
-            clientEvent.dispatch(clientEvent.eventType.roundOver, {loseCamp: Camp.None});
-        }
+        GLB.events[result.sequence] = msg;
     },
 
 });

@@ -10,6 +10,7 @@
 
 var helper = require('Helpers');
 var common = require('Common');
+var SnakeInfo = require('SnakeInfo');
 
 cc.Class({
     extends: cc.Component,
@@ -31,20 +32,21 @@ cc.Class({
         //     }
         // },
 
-        length: 1,
+        baseInfo: null,
+
         thickness: 20,
-        speed: 2,
-        direction: null,
         spacing: 40,
 
         paths: [],
-        seqIndex: 0
+        seqIndex: 0,
+
+        userInfo: null
     },
 
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        this.initPosition = this.node.position;
+        this.baseInfo = new SnakeInfo();        
     },
 
     start () {
@@ -57,14 +59,14 @@ cc.Class({
             // head, calculate the new position
             if (!this.prev) {
                 var posNext = this.getNextPosition();
-                this.node.setPosition(posNext);
+                this.updatePosition(posNext);
 
                 // push new point at the beginning
                 this.paths.unshift(posNext)
             }
             // body, follow the prev path
             else {
-                this.node.setPosition(this.paths[0]);
+                this.updatePosition(this.paths[0]);
             }
 
             // rotate image
@@ -73,7 +75,7 @@ cc.Class({
             this.node.rotation = -angle;
 
             // reached the length of current element
-            if (this.paths.length >= this.spacing / this.speed) {
+            if (this.paths.length >= this.spacing / this.baseInfo.speed) {
                 var posLast = this.paths.pop();
                 
                 // try to make new elemnt
@@ -95,7 +97,7 @@ cc.Class({
         }
 
         // 生成身体部分
-        if (this.length <= 1) {
+        if (this.baseInfo.length <= 1) {
             return;
         }
 
@@ -103,27 +105,39 @@ cc.Class({
         var newBodyObj = newBody.getComponent('Snake');
         this.node.parent.addChild(newBody, Game.MAX_SNAKE_LEN - this.seqIndex - 1);
 
-        newBody.setPosition(this.initPosition);
-        newBodyObj.length = this.length - 1;
+        newBodyObj.baseInfo.length = this.baseInfo.length - 1;
         newBodyObj.prev = this.node;
         newBodyObj.seqIndex = this.seqIndex + 1;
-        newBodyObj.initBody();
+        newBodyObj.initBody(this.initPosition);
         
         this.next = newBody;
     },
 
-    initHead() {
-        var posDir = new cc.Vec2(1,1);
-        this.direction = posDir.normalize();
+    initWithPosition(position) {
+        this.updatePosition(position);
+        this.initPosition = position;
+    },
+
+    /**
+     * Initialize snake head
+     * @param {v2} position 
+     */
+    initHead(position) {        
+        this.initWithPosition(position);
 
         // add head image
         var self = this;
         cc.loader.loadRes("textures/snake/snakeHead", cc.SpriteFrame, function(err, spriteFrame) {
             self.getComponent(cc.Sprite).spriteFrame = spriteFrame;
-        });        
+        });
+
+        // set base info
+        this.baseInfo.length = 10;
     },
 
-    initBody() {
+    initBody(position) {
+        this.initWithPosition(position);
+        
         // add body image
         var self = this;
         cc.loader.loadRes("textures/snake/snakeBody", cc.SpriteFrame, function(err, spriteFrame) {
@@ -136,8 +150,17 @@ cc.Class({
      */
     getNextPosition() {
         var posCur = this.node.position;
-        var posOffset = this.direction.mul(this.speed);
+        var posOffset = this.baseInfo.direction.mul(this.baseInfo.speed);
 
         return posCur.add(posOffset);
+    },
+
+    /**
+     * update position
+     * @param {vec2} pos 
+     */
+    updatePosition(pos) {
+        this.node.setPosition(pos);
+        this.baseInfo.position = pos;
     }
 });
