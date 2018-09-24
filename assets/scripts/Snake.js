@@ -135,7 +135,7 @@ cc.Class({
         this.baseInfo.length = 10;
     },
 
-    initBody(position) {
+    initBody(position) {        
         this.initWithPosition(position);
         
         // add body image

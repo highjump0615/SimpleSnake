@@ -32,6 +32,8 @@ cc.Class({
             default: null,
             type: cc.Node
         },
+
+        players: []
     },
 
     // LIFE-CYCLE CALLBACKS:
@@ -44,19 +46,18 @@ cc.Class({
         // cc.director.getPhysicsManager().gravity = cc.v2()
 
         // init matchvs receivers
-        clientEvent.on(clientEvent.eventType.joinRoomNotify, this.joinRoomNotify, this);
         clientEvent.on(clientEvent.eventType.sendEventResponse, this.sendEventResponse, this);
         clientEvent.on(clientEvent.eventType.sendEventNotify, this.sendEventNotify, this);
 
         var posInit = cc.v2(0, 0);
 
-        // game start event
+        // send game start event to the users
         var msg = {
             action: GLB.GAME_START_EVENT,
             userInfo: GLB.userInfo,
             position: posInit
         };
-        Game.GameManager.sendEventEx(msg);
+        Game.GameManager.sendEvent(msg);
 
         // this.initMainSnake(posInit);
     },
@@ -70,17 +71,24 @@ cc.Class({
         }
 
         // 根据主玩家的位置更新背景位置
-        var pos = this.snakeMain.position.neg();
+        var pos = this.snakeMain.node.position.neg();
         this.main.setPosition(pos);
     },
 
     setDirection(posDir) {        
-        this.snakeMain.getComponent("Snake").baseInfo.direction = posDir.normalize();
+        this.snakeMain.baseInfo.direction = posDir.normalize();
+
+        // send move event to other players
+        var msg = {
+            action: GLB.SNAKE_MOVE_EVENT,
+            userId: GLB.userInfo.id,
+            snakeInfo: this.snakeMain.baseInfo
+        };
+        Game.GameManager.sendEvent(msg);
     },
 
     onDestroy() {
         // close matchvs receivers
-        clientEvent.off(clientEvent.eventType.joinRoomNotify, this.joinRoomNotify, this);
         clientEvent.off(clientEvent.eventType.sendEventResponse, this.sendEventResponse, this);
         clientEvent.off(clientEvent.eventType.sendEventNotify, this.sendEventNotify, this);
     },
@@ -89,11 +97,34 @@ cc.Class({
      * init main player snake
      */
     initMainSnake(pos) {
-        var snake = cc.instantiate(this.snake);
-        this.main.addChild(snake, Game.MAX_SNAKE_LEN);            
-        snake.getComponent("Snake").initHead(pos);
+        this.snakeMain = this.initSnakeWithPosition(pos);            
+    },
 
-        this.snakeMain = snake;            
+    initSnakeWithPosition(pos) {
+        var snake = cc.instantiate(this.snake);
+        this.main.addChild(snake, Game.MAX_SNAKE_LEN);
+        var snakeObj = snake.getComponent('Snake');
+        snakeObj.initHead(pos);
+
+        return snakeObj;
+    },
+
+    /**
+     * add new plyaer with user info
+     * @param {*} userInfo 
+     * @param {*} snake 
+     */
+    addNewPlayer(userInfo, snake) {
+        snake.userInfo = userInfo;
+        this.players.push(snake);
+    },
+
+    getPlayerByUserId(userId) {
+        var res = this.players.find(function(element) {
+            return element.userInfo.id == userId;
+        });
+
+        return res;
     },
 
 
@@ -110,7 +141,7 @@ cc.Class({
         if (event && event.action === GLB.GAME_START_EVENT) {
             // init main player snake
             this.initMainSnake(event.position);
-        }
+        }        
         
         delete GLB.events[sendEventRsp.sequence];
     },
@@ -118,19 +149,46 @@ cc.Class({
     sendEventNotify: function(info) {
         var cpProto = JSON.parse(info.cpProto);
 
+        // received new user's start
         if (info.cpProto.indexOf(GLB.GAME_START_EVENT) >= 0) {
-        }
-    },
+            // add new user's snake
+            var userInfo = cpProto.userInfo;
+            var pos = cpProto.position;
 
-    joinRoomNotify: function(data) {
-        console.log("joinRoomNotify, roomUserInfo:" + JSON.stringify(data.roomUserInfo));
-        // var playerIcon = null;
-        // for (var j = 0; j < this.playerIcons.length; j++) {
-        //     playerIcon = this.playerIcons[j].getComponent('playerIcon');
-        //     if (playerIcon && !playerIcon.userInfo) {
-        //         playerIcon.setData(data.roomUserInfo);
-        //         break;
-        //     }
-        // }
+            var snakeNew = this.initSnakeWithPosition(pos);
+            this.addNewPlayer(userInfo, snakeNew);
+
+            // send my existence to that user
+            var msg = {
+                action: GLB.SNAKE_INFO_EVENT,
+                userInfo: GLB.userInfo,
+                snakeInfo: this.snakeMain.baseInfo
+            };
+            Game.GameManager.sendEventEx(msg, userInfo.id);
+        }
+        else {            
+            var snakeInfo = cpProto.snakeInfo;
+
+            if (info.cpProto.indexOf(GLB.SNAKE_INFO_EVENT) >= 0) {
+                var userInfo = cpProto.userInfo;
+
+                // add new user's snake
+                var snakeNew = this.initSnakeWithPosition(snakeInfo.position);
+                snakeNew.baseInfo.setValues(snakeInfo);
+
+                this.addNewPlayer(userInfo, snakeNew);
+            }
+            else if (info.cpProto.indexOf(GLB.SNAKE_MOVE_EVENT) >= 0) {
+                var userId = cpProto.userId;
+
+                // get the specified player
+                var snake = this.getPlayerByUserId(userId);
+                if (!snake) {
+                    return;
+                }
+
+                snake.baseInfo.setValues(snakeInfo);
+            }
+        }
     },
 });

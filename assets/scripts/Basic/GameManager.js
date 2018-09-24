@@ -239,8 +239,8 @@ cc.Class({
         GLB.events[result.sequence] = msg;
     },
     
-    sendEventEx: function(msg) {
-        var result = mvs.engine.sendEventEx(0, JSON.stringify(msg), 0, GLB.playerUserIds);
+    sendEventEx: function(msg, userId) {
+        var result = mvs.engine.sendEventEx(0, JSON.stringify(msg), 0, [userId]);
         if (result.result !== 0) {
             console.log(msg.action, result.result);
         }
