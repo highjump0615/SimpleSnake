@@ -38,6 +38,7 @@ cc.Class({
         mvs.response.networkStateNotify = this.networkStateNotify.bind(this);
 
         mvs.response.sendEventResponse = this.sendEventResponse.bind(this);
+        mvs.response.gameServerNotify = this.gameServerNotify.bind(this);
 
         var result = mvs.engine.init(mvs.response, GLB.channel, GLB.platform, Config.gameId);
         if (result !== 0) {
@@ -229,9 +230,22 @@ cc.Class({
         clientEvent.dispatch(clientEvent.eventType.sendEventResponse, sendEventRsp);
     },
 
+    gameServerNotify: function(info) {
+        clientEvent.dispatch(clientEvent.eventType.gameServerNotify, info);
+    },
 
-    sendEvent: function(msg) {
-        var result = mvs.engine.sendEvent(JSON.stringify(msg));
+
+    sendEvent: function(msg, withToServer = false) {
+        var result = null;
+
+        // to server also
+        if (withToServer) {
+            result = mvs.engine.sendEventEx(2, JSON.stringify(msg), 1, [GLB.userInfo.id]);
+        }
+        else {
+            result = mvs.engine.sendEvent(JSON.stringify(msg));
+        }
+        
         if (result.result !== 0) {
             console.log(msg.action, result.result);
         }

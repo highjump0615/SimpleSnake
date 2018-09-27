@@ -1458,12 +1458,16 @@
     "snake": {
       "__uuid__": "5d7b8470-b756-4128-933f-939f1f8b3735"
     },
+    "food": {
+      "__uuid__": "0f9834b6-769b-4c78-9e63-da762d3c23a2"
+    },
     "main": {
       "__id__": 5
     },
     "joystick": {
       "__id__": 11
     },
+    "players": [],
     "_id": "e7qvxSK15CoZ/NKfIZvTE/"
   }
 ]

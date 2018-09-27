@@ -21,6 +21,11 @@ cc.Class({
             type: cc.Prefab
         },
 
+        food: {
+            default: null,
+            type: cc.Prefab
+        },
+
         // 背景节点
         main: {
             default: null,
@@ -48,6 +53,7 @@ cc.Class({
         // init matchvs receivers
         clientEvent.on(clientEvent.eventType.sendEventResponse, this.sendEventResponse, this);
         clientEvent.on(clientEvent.eventType.sendEventNotify, this.sendEventNotify, this);
+        clientEvent.on(clientEvent.eventType.gameServerNotify, this.gameServerNotify, this);
 
         var posInit = cc.v2(0, 0);
 
@@ -57,7 +63,7 @@ cc.Class({
             userInfo: GLB.userInfo,
             position: posInit
         };
-        Game.GameManager.sendEvent(msg);
+        Game.GameManager.sendEvent(msg, true);
 
         // this.initMainSnake(posInit);
     },
@@ -91,6 +97,7 @@ cc.Class({
         // close matchvs receivers
         clientEvent.off(clientEvent.eventType.sendEventResponse, this.sendEventResponse, this);
         clientEvent.off(clientEvent.eventType.sendEventNotify, this.sendEventNotify, this);
+        clientEvent.off(clientEvent.eventType.gameServerNotify, this.gameServerNotify, this);
     },
 
     /**
@@ -169,6 +176,7 @@ cc.Class({
         else {            
             var snakeInfo = cpProto.snakeInfo;
 
+            // init other players
             if (info.cpProto.indexOf(GLB.SNAKE_INFO_EVENT) >= 0) {
                 var userInfo = cpProto.userInfo;
 
@@ -178,6 +186,7 @@ cc.Class({
 
                 this.addNewPlayer(userInfo, snakeNew);
             }
+            // move event of other snakes
             else if (info.cpProto.indexOf(GLB.SNAKE_MOVE_EVENT) >= 0) {
                 var userId = cpProto.userId;
 
@@ -191,4 +200,29 @@ cc.Class({
             }
         }
     },
+
+    gameServerNotify: function(info) {
+        cc.log('gameServerNotify');
+
+        if (!info || !info.cpProto) {
+            return;
+        }
+
+        var cpProto = JSON.parse(info.cpProto);
+
+        if (info.cpProto.indexOf(GLB.FOOD_INIT_EVENT) >= 0) {
+            for (var i = 0; i < cpProto.foods.length; i++) {
+                var foodInfo = cpProto.foods[i];
+                
+                // generate food
+                var foodNew = cc.instantiate(this.food);
+                this.main.addChild(foodNew);
+                var foodObj = foodNew.getComponent('Food');
+                foodObj.id = foodInfo.id;
+                foodObj.initWithPosition(foodInfo.point)
+            }
+
+            cc.log('init foods: ' + cpProto.foods.length);
+        }
+    }
 });

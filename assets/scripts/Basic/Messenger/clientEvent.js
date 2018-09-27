@@ -27,7 +27,8 @@ window.clientEvent = {
         playerAccountGet: "playerAccountGet",
 
         sendEventNotify: "sendEventNotify",
-        sendEventResponse: "sendEventResponse"        
+        sendEventResponse: "sendEventResponse",
+        gameServerNotify: "gameServerNotify"
     },
     eventListener: null
 }
