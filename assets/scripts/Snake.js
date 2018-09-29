@@ -88,6 +88,11 @@ cc.Class({
                 }
             }
         }
+        else {
+            // hit the border, game over
+            this.die();
+            common.game.showGameOver();            
+        }
     },
 
     addBodyElement() {
@@ -162,5 +167,17 @@ cc.Class({
     updatePosition(pos) {
         this.node.setPosition(pos);
         this.baseInfo.position = pos;
+    },
+
+    /**
+     * remove from game ground
+     */
+    die() {
+        if (this.next) {
+            this.next.getComponent('Snake').die();
+        }
+
+        this.node.removeFromParent();
+        this.destroy();
     }
 });

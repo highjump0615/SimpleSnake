@@ -32,6 +32,12 @@ cc.Class({
             type: cc.Node
         },
 
+        // 结束后菜单
+        menu: {
+            default: null,
+            type: cc.Node
+        },
+
         // 方向盘
         joystick: {
             default: null,
@@ -45,28 +51,13 @@ cc.Class({
 
     onLoad () {
         // init
-        common.game = this;
+        common.game = this;        
 
         // cc.director.getPhysicsManager().enabled = true;
         // cc.director.getPhysicsManager().gravity = cc.v2()
 
-        // init matchvs receivers
-        clientEvent.on(clientEvent.eventType.sendEventResponse, this.sendEventResponse, this);
-        clientEvent.on(clientEvent.eventType.sendEventNotify, this.sendEventNotify, this);
-        clientEvent.on(clientEvent.eventType.gameServerNotify, this.gameServerNotify, this);
-
-        var posInit = cc.v2(0, 0);
-
-        // send game start event to the users
-        var msg = {
-            action: GLB.GAME_START_EVENT,
-            userInfo: GLB.userInfo,
-            position: posInit
-        };
-        Game.GameManager.sendEvent(msg, true);
-
-        // this.initMainSnake(posInit);
-    },
+        this.startGame();
+    },    
 
     start () {
     },
@@ -101,6 +92,31 @@ cc.Class({
     },
 
     /**
+     * start game with new snake
+     */
+    startGame() {
+        // hide the menu layer
+        this.menu.active = false;
+
+        // init matchvs receivers
+        clientEvent.on(clientEvent.eventType.sendEventResponse, this.sendEventResponse, this);
+        clientEvent.on(clientEvent.eventType.sendEventNotify, this.sendEventNotify, this);
+        clientEvent.on(clientEvent.eventType.gameServerNotify, this.gameServerNotify, this);
+
+        var posInit = cc.v2(0, 0);
+
+        // send game start event to the users
+        var msg = {
+            action: GLB.GAME_START_EVENT,
+            userInfo: GLB.userInfo,
+            position: posInit
+        };
+        // Game.GameManager.sendEvent(msg, true);
+
+        this.initMainSnake(posInit);
+    },
+
+    /**
      * init main player snake
      */
     initMainSnake(pos) {
@@ -132,6 +148,26 @@ cc.Class({
         });
 
         return res;
+    },
+
+    showGameOver() {
+        this.snakeMain = null;
+
+        var self = this;
+        // show game over after 1s
+        setTimeout(function() {
+            self.menu.active = true;
+        }, 1000);        
+    },
+
+    // button events
+    onButRestart() {
+        this.startGame();
+    },
+
+    onButBack() {
+        // Go to menu scene
+        cc.director.loadScene("menu");
     },
 
 
