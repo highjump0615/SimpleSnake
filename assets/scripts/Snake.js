@@ -38,7 +38,7 @@ cc.Class({
         spacing: 40,
 
         paths: [],
-        seqIndex: 0,
+        seqIndex: 0,        
 
         userInfo: null
     },
@@ -89,9 +89,48 @@ cc.Class({
             }
         }
         else {
-            // hit the border, game over
-            this.die();
-            common.game.showGameOver();            
+            // head
+            if (!this.prev) {
+                // hit the border, game over
+                this.die();
+                common.game.showGameOver();
+
+                return;
+            }
+        }
+
+        // 
+        // only consider head
+        //
+        if (this.prev) {
+            return;
+        }
+
+        // check if eats food
+        var i = common.game.foods.length
+        while (i--) {
+            var food = common.game.foods[i];
+
+            if (this.getDistanceTo(food.node.position) < Game.DIST_FOOD_EAT) {
+                // restrict angle, so it can only it in its direction
+                if (this.getAngleTo(food.node.position) > 45) {
+                    continue;
+                }
+
+                // eat food
+                var actionMove = cc.moveTo(0.1, this.getNextPosition()).easing(cc.easeCubicActionOut());
+                var callback = cc.callFunc(function(target, data) {
+                    // remove food
+                    data.node.removeFromParent();
+                    data.destroy();
+                }, this, food);
+
+                var action = cc.sequence(actionMove, callback);
+                food.node.runAction(action);
+
+                // remove from array
+                common.game.foods.splice(i, 1);
+            }
         }
     },
 
@@ -147,7 +186,7 @@ cc.Class({
         var self = this;
         cc.loader.loadRes("textures/snake/snakeBody", cc.SpriteFrame, function(err, spriteFrame) {
             self.getComponent(cc.Sprite).spriteFrame = spriteFrame;
-        });        
+        });
     },
 
     /**
@@ -170,9 +209,29 @@ cc.Class({
     },
 
     /**
+     * calculate distance
+     * @param {vec2} pos 
+     */
+    getDistanceTo(pos) {
+        var dist = pos.sub(this.node.position).mag();
+        return dist;
+    },
+
+    getAngleTo(pos) {
+        var diff = pos.sub(this.node.position);
+        var angle = diff.angle(this.baseInfo.direction);
+        return angle / Math.PI * 180;        
+    },
+
+    /**
      * remove from game ground
      */
     die() {
+        // generate foood; 2 foods for 5 lengths
+        if (this.seqIndex % 5 == 1 || this.seqIndex % 5 == 4) {
+            common.game.addFood(this.node.position, 3);
+        }
+
         if (this.next) {
             this.next.getComponent('Snake').die();
         }

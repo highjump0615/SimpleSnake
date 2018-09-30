@@ -12,7 +12,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "food1",
+    "_name": "food",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
@@ -98,7 +98,7 @@
     "_isTrimmedMode": true,
     "_state": 0,
     "_atlas": null,
-    "_id": "c0YvbWtstE/b6G8WDwvymD"
+    "_id": "96noOE+iNPb6ktvImcAD3v"
   },
   {
     "__type__": "55ed1M2nQtEhoIoh1Y4n0Jp",
@@ -109,7 +109,8 @@
     },
     "_enabled": true,
     "id": 0,
-    "_id": "87w9/61dJKVrjpWVj7rPIP"
+    "weight": 1,
+    "_id": "80bubd4ldPJYwM4nAhRkEr"
   },
   {
     "__type__": "cc.PrefabInfo",

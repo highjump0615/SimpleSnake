@@ -44,7 +44,8 @@ cc.Class({
             type: cc.Node
         },
 
-        players: []
+        players: [],
+        foods: []
     },
 
     // LIFE-CYCLE CALLBACKS:
@@ -111,9 +112,9 @@ cc.Class({
             userInfo: GLB.userInfo,
             position: posInit
         };
-        // Game.GameManager.sendEvent(msg, true);
+        Game.GameManager.sendEvent(msg, true);
 
-        this.initMainSnake(posInit);
+        // this.initMainSnake(posInit);
     },
 
     /**
@@ -168,6 +169,18 @@ cc.Class({
     onButBack() {
         // Go to menu scene
         cc.director.loadScene("menu");
+    },
+
+    addFood(position, weight = 1) {
+        var foodNew = cc.instantiate(this.food);
+        this.main.addChild(foodNew);
+        var foodObj = foodNew.getComponent('Food');
+
+        // foodObj.id = foodInfo.id;
+
+        foodObj.initWithPosition(position, weight)
+
+        this.foods.push(foodObj);
     },
 
 
@@ -251,11 +264,10 @@ cc.Class({
                 var foodInfo = cpProto.foods[i];
                 
                 // generate food
-                var foodNew = cc.instantiate(this.food);
-                this.main.addChild(foodNew);
-                var foodObj = foodNew.getComponent('Food');
-                foodObj.id = foodInfo.id;
-                foodObj.initWithPosition(foodInfo.point)
+                var x = foodInfo.point.x - GLB.GROUND_WIDTH / 2;
+                var y = foodInfo.point.y - GLB.GROUND_HEIGHT / 2;
+
+                this.addFood(cc.v2(x, y));                
             }
 
             cc.log('init foods: ' + cpProto.foods.length);
