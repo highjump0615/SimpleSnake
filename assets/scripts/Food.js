@@ -42,5 +42,13 @@ cc.Class({
                 self.getComponent(cc.Sprite).spriteFrame = spriteFrame;
             });
         }
+    },
+
+    getBaseInfo() {
+        return {
+            id: this.id,
+            weight: this.weight,
+            position: this.node.position,
+        }
     }
 });

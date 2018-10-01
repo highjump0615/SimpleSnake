@@ -17,6 +17,8 @@ var obj = {
     SNAKE_INFO_EVENT: "ev_snakeInfo",
     SNAKE_MOVE_EVENT: "ev_snakeMove",
     FOOD_INIT_EVENT: "ev_foodInit",
+    FOOD_CREATE_EVENT: "ev_foodCreate",
+    FOOD_EAT_EVENT: "ev_foodEat",
 
     events: {},
 };

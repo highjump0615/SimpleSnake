@@ -10,6 +10,7 @@
 
 var common = require('Common');
 var GLB = require('Glb');
+var helper = require('Helpers');
 
 cc.Class({
     extends: cc.Component,
@@ -133,7 +134,7 @@ cc.Class({
         };
         Game.GameManager.sendEvent(msg, true);
 
-        this.initMainSnake(posInit);
+        // this.initMainSnake(posInit);
     },
 
     /**
@@ -141,6 +142,7 @@ cc.Class({
      */
     initMainSnake(pos) {
         this.snakeMain = this.initSnakeWithPosition(pos);
+        this.snakeMain.userInfo = GLB.userInfo;
 
         // update score
         this.updateScore();
@@ -183,16 +185,52 @@ cc.Class({
         }, 1000);        
     },
 
-    addFood(position, weight = 1) {
+    createFood(position, id = "", weight = 1) {
         var foodNew = cc.instantiate(this.food);
-        this.main.addChild(foodNew);
         var foodObj = foodNew.getComponent('Food');
 
-        // foodObj.id = foodInfo.id;
+        // existing id
+        if (id) {
+            foodObj.id = id;
+        }
 
         foodObj.initWithPosition(position, weight)
 
-        this.foods.push(foodObj);
+        return foodObj;
+    },
+
+    addFood(position, id = "", weight = 1) {
+        var foodNew = this.createFood(position, id, weight);
+
+        this.main.addChild(foodNew.node);
+        this.foods.push(foodNew);
+    },
+
+    /**
+     * add foods generated from snake
+     * @param {*} aryFood 
+     */
+    addSnakeFoods(aryFood) {
+        var foodsInfo = [];
+
+        for (var i = 0; i < aryFood.length; i++) {
+            var food = aryFood[i];
+            
+            // add to main ground
+            this.main.addChild(food.node);
+            this.foods.push(food)
+
+            // collect new foods info
+            foodsInfo.push(food.getBaseInfo());
+        }
+
+        // send event for food create
+        var msg = {
+            action: GLB.FOOD_CREATE_EVENT,
+            userId: GLB.userInfo.id,
+            foods: foodsInfo
+        };
+        Game.GameManager.sendEvent(msg, true);
     },
 
     updateScore() {
@@ -292,10 +330,10 @@ cc.Class({
                 var foodInfo = cpProto.foods[i];
                 
                 // generate food
-                var x = foodInfo.point.x - GLB.GROUND_WIDTH / 2;
-                var y = foodInfo.point.y - GLB.GROUND_HEIGHT / 2;
+                var x = foodInfo.point.x;
+                var y = foodInfo.point.y;
 
-                this.addFood(cc.v2(x, y));                
+                this.addFood(cc.v2(x, y), foodInfo.id);                
             }
 
             cc.log('init foods: ' + cpProto.foods.length);

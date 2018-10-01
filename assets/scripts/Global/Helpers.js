@@ -19,7 +19,27 @@ function isInGameArea(point) {
     return true;    
 }
 
+/**
+ * convert to string with leading zeros
+ * @param {*} num 
+ * @param {*} size 
+ */
+function stringPad(num, size) {
+    var s = num + '';
+    while (s.length < size) {
+        s = '0' + s;
+    }
+
+    return s;
+}
+
+function timestampSecond() {
+    return parseInt(new Date().getTime() / 1000);
+}
+
 
 export default {
     isInGameArea,
+    stringPad,
+    timestampSecond
 }

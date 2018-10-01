@@ -11,6 +11,7 @@
 var helper = require('Helpers');
 var common = require('Common');
 var SnakeInfo = require('SnakeInfo');
+var GLB = require('Glb');
 
 cc.Class({
     extends: cc.Component,
@@ -38,9 +39,12 @@ cc.Class({
         spacing: 40,
 
         paths: [],
-        seqIndex: 0,        
+        seqIndex: 0,
 
-        userInfo: null
+        userInfo: null,
+
+        // foods generated
+        foodsDead: [],
     },
 
     // LIFE-CYCLE CALLBACKS:
@@ -189,6 +193,32 @@ cc.Class({
         // set base info
         this.baseInfo.length = 6;
         this.baseInfo.score = Game.LENGTH_WEIGHT * this.baseInfo.length;
+
+        // set timer for food generation
+        // generate 8 foods per second
+        var self = this;
+        this.foodTimer = setInterval(function() {
+            var foods = [];
+            
+            for (var i = 0; i < 5; i++) {
+                // generate id
+                var foodId = helper.stringPad(helper.timestampSecond(), 11) 
+                        + helper.stringPad(i + 1, 3) 
+                        + '1'
+                        + self.userInfo.id;
+
+                var x = Math.random() * GLB.GROUND_WIDTH - GLB.GROUND_WIDTH / 2;
+                var y = Math.random() * GLB.GROUND_HEIGHT - GLB.GROUND_HEIGHT / 2;
+    
+                var foodNew = common.game.createFood(cc.v2(x, y), foodId);
+                
+                foods.push(foodNew);
+            }
+
+            // the last element, add foods to main ground
+            common.game.addSnakeFoods(foods);
+
+        }, 1000);
     },
 
     /**
@@ -251,13 +281,34 @@ cc.Class({
      * remove from game ground
      */
     die() {
-        // generate foood; 2 foods for 5 lengths
-        if (this.seqIndex % 5 == 1 || this.seqIndex % 5 == 4) {
-            common.game.addFood(this.node.position, Game.LENGTH_WEIGHT);
-        }
-
         if (this.next) {
             this.next.die();
+        }
+
+        // generate food; 2 foods for 5 lengths
+        if (this.seqIndex % 5 == 1 || this.seqIndex % 5 == 4) {
+            var head = this.getHeadElement();
+
+            // generate id
+            var foodId = helper.stringPad(helper.timestampSecond(), 11) 
+                    + helper.stringPad(head.foodsDead.length + 1, 3) 
+                    + Game.LENGTH_WEIGHT
+                    + head.userInfo.id;
+
+            var foodNew = common.game.createFood(this.node.position, foodId, Game.LENGTH_WEIGHT);
+            
+            head.foodsDead.push(foodNew);
+        }
+
+        // head
+        if (!this.prev) {
+            // the last element, add foods to main ground
+            common.game.addSnakeFoods(this.foodsDead);
+
+            this.foodsDead = [];
+
+            // clear food timer
+            clearInterval(this.foodTimer);
         }
 
         this.node.removeFromParent();
