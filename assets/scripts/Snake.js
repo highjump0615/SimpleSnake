@@ -76,15 +76,15 @@ cc.Class({
 
             // reached the length of current element
             if (this.paths.length >= this.spacing / this.baseInfo.speed) {
-                var posLast = this.paths.pop();
-                
-                // try to make new elemnt
-                this.addBodyElement();
+                var posLast = this.paths.pop();                
 
+                // add last position to the next node
                 if (this.next) {
-                    // add last position to the next node
-                    var next = this.next.getComponent('Snake');
-                    next.paths.unshift(posLast);
+                    this.next.paths.unshift(posLast);
+                }
+                // the last element, check the current length and try to make new elemnt
+                else {
+                    this.addBodyElement();
                 }
             }
         }
@@ -117,7 +117,11 @@ cc.Class({
                     continue;
                 }
 
+                //
                 // eat food
+                //
+
+                // action
                 var actionMove = cc.moveTo(0.1, this.getNextPosition()).easing(cc.easeCubicActionOut());
                 var callback = cc.callFunc(function(target, data) {
                     // remove food
@@ -128,6 +132,9 @@ cc.Class({
                 var action = cc.sequence(actionMove, callback);
                 food.node.runAction(action);
 
+                // score
+                this.baseInfo.incrementScore(food.weight);
+
                 // remove from array
                 common.game.foods.splice(i, 1);
             }
@@ -135,26 +142,30 @@ cc.Class({
     },
 
     addBodyElement() {
-        // already added prev element, no need to add again
+        // already added next element, no need to add again
         if (this.next) {
             return;
         }
 
-        // 生成身体部分
-        if (this.baseInfo.length <= 1) {
+        // get the head
+        var head = this.getHeadElement();
+
+        // check current length; if it is same as total length, return
+        var currentLength = this.seqIndex + 1;
+        if (head.baseInfo.length <= currentLength) {
             return;
         }
 
         var newBody = cc.instantiate(common.game.snake);
         var newBodyObj = newBody.getComponent('Snake');
-        this.node.parent.addChild(newBody, Game.MAX_SNAKE_LEN - this.seqIndex - 1);
+        this.node.parent.addChild(newBody, Game.MAX_SNAKE_LEN - currentLength);
 
         newBodyObj.baseInfo.length = this.baseInfo.length - 1;
-        newBodyObj.prev = this.node;
-        newBodyObj.seqIndex = this.seqIndex + 1;
+        newBodyObj.prev = this;
+        newBodyObj.seqIndex = currentLength;
         newBodyObj.initBody(this.initPosition);
         
-        this.next = newBody;
+        this.next = newBodyObj;
     },
 
     initWithPosition(position) {
@@ -176,7 +187,20 @@ cc.Class({
         });
 
         // set base info
-        this.baseInfo.length = 10;
+        this.baseInfo.length = 6;
+        this.baseInfo.score = Game.LENGTH_WEIGHT * this.baseInfo.length;
+    },
+
+    /**
+     * get head element of the snake element chain
+     */
+    getHeadElement() {
+        var element = this;
+        while (element.prev) {
+            element = element.prev;
+        }
+
+        return element;
     },
 
     initBody(position) {        
@@ -221,7 +245,7 @@ cc.Class({
         var diff = pos.sub(this.node.position);
         var angle = diff.angle(this.baseInfo.direction);
         return angle / Math.PI * 180;        
-    },
+    },    
 
     /**
      * remove from game ground
@@ -229,11 +253,11 @@ cc.Class({
     die() {
         // generate foood; 2 foods for 5 lengths
         if (this.seqIndex % 5 == 1 || this.seqIndex % 5 == 4) {
-            common.game.addFood(this.node.position, 3);
+            common.game.addFood(this.node.position, Game.LENGTH_WEIGHT);
         }
 
         if (this.next) {
-            this.next.getComponent('Snake').die();
+            this.next.die();
         }
 
         this.node.removeFromParent();

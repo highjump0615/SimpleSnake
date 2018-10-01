@@ -2607,7 +2607,20 @@
     "joystick": {
       "__id__": 11
     },
+    "labelScore": {
+      "__id__": 25
+    },
+    "labelKills": {
+      "__id__": 27
+    },
+    "labelGameOverScore": {
+      "__id__": 40
+    },
+    "labelGameOverKills": {
+      "__id__": 44
+    },
     "players": [],
+    "foods": [],
     "_id": "e7qvxSK15CoZ/NKfIZvTE/"
   }
 ]

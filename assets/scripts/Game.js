@@ -44,6 +44,25 @@ cc.Class({
             type: cc.Node
         },
 
+        // labels
+        labelScore: {
+            default: null,
+            type: cc.Label
+        },
+        labelKills: {
+            default: null,
+            type: cc.Label
+        },
+        labelGameOverScore: {
+            default: null,
+            type: cc.Label
+        },
+        labelGameOverKills: {
+            default: null,
+            type: cc.Label
+        },
+
+
         players: [],
         foods: []
     },
@@ -114,14 +133,17 @@ cc.Class({
         };
         Game.GameManager.sendEvent(msg, true);
 
-        // this.initMainSnake(posInit);
+        this.initMainSnake(posInit);
     },
 
     /**
      * init main player snake
      */
     initMainSnake(pos) {
-        this.snakeMain = this.initSnakeWithPosition(pos);            
+        this.snakeMain = this.initSnakeWithPosition(pos);
+
+        // update score
+        this.updateScore();
     },
 
     initSnakeWithPosition(pos) {
@@ -161,16 +183,6 @@ cc.Class({
         }, 1000);        
     },
 
-    // button events
-    onButRestart() {
-        this.startGame();
-    },
-
-    onButBack() {
-        // Go to menu scene
-        cc.director.loadScene("menu");
-    },
-
     addFood(position, weight = 1) {
         var foodNew = cc.instantiate(this.food);
         this.main.addChild(foodNew);
@@ -182,6 +194,22 @@ cc.Class({
 
         this.foods.push(foodObj);
     },
+
+    updateScore() {
+        // score
+        this.labelScore.string = "Length: " + this.snakeMain.baseInfo.score;
+        this.labelGameOverScore.string = this.snakeMain.baseInfo.score;
+    },
+
+    // button events
+    onButRestart() {
+        this.startGame();        
+    },
+
+    onButBack() {
+        // Go to menu scene
+        cc.director.loadScene("menu");
+    },    
 
 
     //
