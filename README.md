@@ -55,8 +55,8 @@ Generated in postions received from server
 Implemented game server using Matchvs SDK.  
 Its source code is [here](https://github.com/highjump0615/SnakeMuliplayerBackend).  
 
-- Not added to github, due to file size  
-  - *packages/plugin-matchvs/matchvs/matchvsnative/lib*
+- Not added to github  
+  - *packages/plugin-matchvs/*
 
 
 ## Need to Improve
